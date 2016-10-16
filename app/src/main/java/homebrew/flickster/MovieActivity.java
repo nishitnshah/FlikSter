@@ -33,31 +33,30 @@ public class MovieActivity extends AppCompatActivity {
         movies = new ArrayList<>();
         movieAdapter = new MovieArrayAdapter(this, movies);
         lvItems.setAdapter(movieAdapter);
-        String url = "https://api.themoviedb.org/3/movie/now_playing?api_key=a07e22bc18f5cb106bfe4cc1f83ad8ed";
-        AsyncHttpClient client = new AsyncHttpClient();
+        if(savedInstanceState != null) {
+            ArrayList<Movie> savedMovies = savedInstanceState.getParcelableArrayList("savedInstance");
+            movies.addAll(savedMovies);
+            /*
+            Note: notifyDataSetChanged will only be called if we call addAll(), add(), clear(),
+            insert(), remove() methods on ArrayList. direct assignment to ArrayList will not change
+            */
+        }
+        else {
+            getMovieJsonData();
+        }
+    }
 
-        client.get(url, new JsonHttpResponseHandler() {
+    public void getMovieJsonData () {
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get(getString(R.string.url) , new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 JSONArray movieJasonResults = null;
 
                 try {
                     movieJasonResults = response.getJSONArray("results");
-                    if(savedInstanceState != null) {
-                        ArrayList<Movie> savedMovies = savedInstanceState.getParcelableArrayList("savedInstance");
-                        movies.addAll(savedMovies);
-                        /*
-                        Note: notifyDataSetChanged will only be called if we call addAll(), add(), clear(),
-                        insert(), remove() methods on ArrayList. direct assignment to ArrayList will not change
-                        */
-                        Log.d("DEBUG","OnSuccess, getting parceable:" +  movies.toString());
-                    }
-                    else {
-                        movies.addAll(Movie.fromJSONArray(movieJasonResults));
-                        Log.d("DEBUG","OnSuccess, getting json:" +  movies.toString());
-                    }
+                    movies.addAll(Movie.fromJSONArray(movieJasonResults));
                     movieAdapter.notifyDataSetChanged();
-                    //Log.d("DEBUG","OnSuccess:" +  movies.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -73,7 +72,6 @@ public class MovieActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("savedInstance", movies);
-        Log.d("DEBUG", "OnSaveInstanceState:" + movies.toString());
         super.onSaveInstanceState(outState);
     }
 }
