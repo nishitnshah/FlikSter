@@ -1,5 +1,6 @@
 package homebrew.flickster;
 
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,6 +21,7 @@ import homebrew.flickster.adapters.MovieArrayAdapter;
 import homebrew.flickster.models.Movie;
 
 public class MovieActivity extends AppCompatActivity {
+    private SwipeRefreshLayout swipeContainer;
 
     ArrayList<Movie> movies;
     MovieArrayAdapter movieAdapter;
@@ -33,6 +35,23 @@ public class MovieActivity extends AppCompatActivity {
         movies = new ArrayList<>();
         movieAdapter = new MovieArrayAdapter(this, movies);
         lvItems.setAdapter(movieAdapter);
+
+        // Lookup the swipe container view
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+        // Setup refresh listener which triggers new data loading
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                getMovieJsonData();
+                swipeContainer.setRefreshing(false);
+            }
+        });
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
+
         if(savedInstanceState != null) {
             ArrayList<Movie> savedMovies = savedInstanceState.getParcelableArrayList("savedInstance");
             movies.addAll(savedMovies);
@@ -55,6 +74,7 @@ public class MovieActivity extends AppCompatActivity {
 
                 try {
                     movieJasonResults = response.getJSONArray("results");
+                    movieAdapter.clear();
                     movies.addAll(Movie.fromJSONArray(movieJasonResults));
                     movieAdapter.notifyDataSetChanged();
                 } catch (JSONException e) {
