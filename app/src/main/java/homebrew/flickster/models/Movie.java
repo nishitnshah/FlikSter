@@ -9,16 +9,25 @@ import org.parceler.Parcel;
 
 import java.util.ArrayList;
 
+import static homebrew.flickster.models.Movie.MovieType.POPULAR;
+import static homebrew.flickster.models.Movie.MovieType.REGULAR;
+
 /**
  * Created by Nishit on 10/12/16.
  */
 
 public class Movie implements Parcelable {
 
+    public enum MovieType {
+        REGULAR, POPULAR
+    }
     String posterPath;
     String backdropPath;
     String movieTitle;
     String overview;
+    long voteAverage;
+
+    MovieType movieType;
 
     public String getPosterPath() {
         return String.format("https://image.tmdb.org/t/p/w342/%s",posterPath);
@@ -36,6 +45,14 @@ public class Movie implements Parcelable {
         return String.format("https://image.tmdb.org/t/p/w342/%s",backdropPath);
     }
 
+    public long getVoteAverage () {
+        return voteAverage;
+    }
+
+    public MovieType getMovieType () {
+        return movieType;
+    }
+
     public Movie () {
 
     }
@@ -45,6 +62,13 @@ public class Movie implements Parcelable {
         this.backdropPath = obj.getString("backdrop_path");
         this.movieTitle = obj.getString("original_title");
         this.overview = obj.getString("overview");
+        this.voteAverage = obj.getLong("vote_average");
+        if(this.voteAverage > 5) {
+            movieType = POPULAR;
+        }
+        else {
+            movieType = REGULAR;
+        }
     }
 
     public static ArrayList<Movie> fromJSONArray(JSONArray array) {
@@ -71,6 +95,8 @@ public class Movie implements Parcelable {
         dest.writeString(this.backdropPath);
         dest.writeString(this.movieTitle);
         dest.writeString(this.overview);
+        dest.writeLong(this.voteAverage);
+        dest.writeInt(this.movieType.ordinal());
     }
 
     protected Movie(android.os.Parcel in) {
@@ -78,6 +104,8 @@ public class Movie implements Parcelable {
         this.backdropPath = in.readString();
         this.movieTitle = in.readString();
         this.overview = in.readString();
+        this.voteAverage = in.readLong();
+        this.movieType = MovieType.values()[in.readInt()];
     }
 
     public static final Parcelable.Creator<Movie> CREATOR = new Parcelable.Creator<Movie>() {
